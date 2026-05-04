@@ -1,36 +1,3 @@
-"""
-main.py — Complete pipeline for child reaction detection using Neural ODEs.
-
-Course: EN.560.652.01.FA25 — Scientific Machine Learning for Dynamics and Control
-Author: Shuning Wang (swang416@jhu.edu)
-Johns Hopkins University
-
-This script implements the full experimental pipeline in three steps:
-  Step 1: Extract optical flow features from session videos
-  Step 2: Train LR / LSTM / Neural ODE with LOSO cross-validation
-           (8 train / 1 val / 1 test, early stopping on validation macro F1)
-  Step 3: Generate summary figures for the report
-
-Mathematical formulation:
-  x(t) ∈ R^3   — optical flow features (mean magnitude, vx, vy)
-  u   ∈ R^11   — control: one-hot error type (10) + normalized onset time (1)
-  h(t)∈ R^32   — Neural ODE latent state
-  dh/dt = f_θ(h(t), u, t)   [2-layer MLP, tanh, dopri5 solver]
-  ŷ = σ(W [h(t₀+Δ); u] + b)
-
-Usage:
-  python main.py
-
-Output:
-  features_cv/        — extracted optical flow features (.npy files)
-  manifest_cv.csv     — feature index
-  results_loso.csv    — per-fold per-model metrics
-  results_summary.txt — mean ± std summary table
-  fig_summary.png     — bar chart of results
-  fig_perfold.png     — per-fold line plots
-  fig_trajectory.png  — Neural ODE latent trajectory illustration
-"""
-
 import os, warnings, tempfile
 warnings.filterwarnings('ignore')
 
@@ -52,9 +19,7 @@ from torchdiffeq import odeint_adjoint as odeint
 torch.manual_seed(42)
 np.random.seed(42)
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# CONFIG — update BASE_DIR to match your data path
-# ═══════════════════════════════════════════════════════════════════════════════
+# CONFIG
 BASE_DIR     = Path("/scratch/Workspace2/xwang434/IsaacLab/lerobot/Sciml")
 VIDEO_DIR    = BASE_DIR / "videos"
 FEATURE_DIR  = BASE_DIR / "features_cv"
@@ -76,9 +41,7 @@ LR_RATE  = 1e-3
 BATCH    = 16
 DEVICE   = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # STEP 1: FEATURE EXTRACTION
-# ═══════════════════════════════════════════════════════════════════════════════
 print("\n" + "="*60)
 print("  STEP 1: Extracting optical flow features")
 print("="*60)
@@ -229,9 +192,7 @@ pos = manifest['label'].sum()
 print(f"Features extracted: {len(manifest)} events | "
       f"Positive: {pos} ({pos/len(manifest):.1%}) | Skipped: {skipped}")
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # STEP 2: MODEL TRAINING & LOSO EVALUATION
-# ═══════════════════════════════════════════════════════════════════════════════
 print("\n" + "="*60)
 print(f"  STEP 2: Training models (device: {DEVICE})")
 print("="*60)
@@ -272,7 +233,7 @@ children        = np.array([s['child'] for s in samples])
 unique_children = sorted(set(children))
 print(f"Samples: {len(samples)} | Children: {len(unique_children)}")
 
-# ── Dataset ───────────────────────────────────────────────────────────────────
+# Dataset
 class ReactionDataset(Dataset):
     def __init__(self, sample_list, scaler=None, fit_scaler=False):
         xs   = np.stack([s['x'] for s in sample_list])
@@ -290,7 +251,7 @@ class ReactionDataset(Dataset):
     def __len__(self):  return len(self.y)
     def __getitem__(self, i): return self.x[i], self.u[i], self.y[i]
 
-# ── Models ────────────────────────────────────────────────────────────────────
+# Models
 class LSTMModel(nn.Module):
     """
     LSTM baseline.
@@ -358,7 +319,7 @@ class NeuralODEModel(nn.Module):
             torch.cat([h_traj[-1], u], dim=-1)
         ).squeeze(-1)
 
-# ── Training utilities ────────────────────────────────────────────────────────
+# Training utilities
 def compute_pos_weight(y_train):
     n_pos = (y_train == 1).sum()
     n_neg = (y_train == 0).sum()
@@ -420,7 +381,7 @@ def metrics(y_true, y_prob):
     bal = balanced_accuracy_score(y_true, y_pred)
     return f1, auc, bal
 
-# ── LOSO cross-validation (8 train / 1 val / 1 test) ─────────────────────────
+# LOSO cross-validation (8 train / 1 val / 1 test)
 all_results = []
 
 for fold, test_child in enumerate(unique_children):
@@ -505,9 +466,7 @@ with open('results_summary.txt', 'w') as f:
     f.write("=" * 60 + "\n")
     f.write('\n'.join(lines) + '\n')
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # STEP 3: GENERATE FIGURES
-# ═══════════════════════════════════════════════════════════════════════════════
 print("\n" + "="*60)
 print("  STEP 3: Generating figures")
 print("="*60)
