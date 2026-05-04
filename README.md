@@ -19,7 +19,7 @@ This project frames child–robot interaction as a controlled continuous-time dy
 ## Repository Structure
 
 ```
-├── run_all.py          # ★ Single executable — runs the full pipeline
+├── run_all.py          # Single executable — runs the full pipeline
 ├── extract_cv.py       # Step 1: Extract optical flow features from videos
 ├── train_val.py        # Step 2: Train LR / LSTM / Neural ODE, LOSO evaluation
 ├── gen_figures.py      # Step 3: Generate figures for the report
