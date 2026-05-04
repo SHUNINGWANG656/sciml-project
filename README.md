@@ -19,6 +19,7 @@ This project frames child–robot interaction as a controlled continuous-time dy
 ## Repository Structure
 
 ```
+├── run_all.py          # ★ Single executable — runs the full pipeline
 ├── extract_cv.py       # Step 1: Extract optical flow features from videos
 ├── train_val.py        # Step 2: Train LR / LSTM / Neural ODE, LOSO evaluation
 ├── gen_figures.py      # Step 3: Generate figures for the report
@@ -66,7 +67,18 @@ pip install torch==2.1.2 torchdiffeq scikit-learn pandas numpy scipy opencv-pyth
 
 ## Usage
 
-### Step 1: Extract optical flow features
+### Quick start (single executable)
+
+```bash
+# First update BASE_DIR in each script to match your data path
+python run_all.py
+```
+
+This runs all three steps in order and outputs `results_summary.txt` and `fig_*.png`.
+
+---
+
+### Step-by-step
 
 ```bash
 python extract_cv.py
