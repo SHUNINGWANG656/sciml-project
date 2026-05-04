@@ -1,8 +1,6 @@
 # Modeling Child Reaction Dynamics in Child-Robot Interaction using Neural ODEs
 
 **Course:** EN.560.652.01.FA25 — Scientific Machine Learning for Dynamics and Control  
-**Author:** Shuning Wang (swang416@jhu.edu)  
-**Institution:** Johns Hopkins University
 
 ---
 
